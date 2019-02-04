@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      background-color: #333;
+      color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>TEST PAGE</h1>
+  <input id="file-input" type="file" multiple="">
+  <script src="./parseAudioMetadata.js" type="module"></script>
+  <script type="module">
+      import parseAudioMetadata from "./parseAudioMetadata.js";
+
+      document.getElementById("file-input").addEventListener("change", async ({ target }) => {
+        for (const file of target.files) {
+          const tags = await parseAudioMetadata(file);
+          console.log(tags);
+        }
+      });
+  </script>
+</body>
+</html>
+

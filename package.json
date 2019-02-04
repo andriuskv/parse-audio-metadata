@@ -1,0 +1,36 @@
+{
+  "name": "parse-audio-metadata",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/parseAudioMetadata.js",
+  "module": "dist/parseAudioMetadata.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "start": "npm run dist-dev && npm run watch & live-server dist",
+    "dist": "rm -rf dist && mkdir dist",
+    "dist-dev": "npm run dist && cp src/index.html dist",
+    "watch": "rollup -cw",
+    "build": "npm run dist && rollup -c"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/polyfill": "^7.2.5",
+    "@babel/preset-env": "^7.3.1",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.12.1",
+    "live-server": "^1.2.1",
+    "rollup": "^1.1.2",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-node-resolve": "^4.0.0"
+  },
+  "browserslist": [
+    "last 4 chrome versions",
+    "last 4 firefox versions",
+    "last 1 edge versions",
+    "last 1 and_chr versions",
+    "last 1 safari versions"
+  ]
+}
