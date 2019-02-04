@@ -1,12 +1,11 @@
 {
   "name": "parse-audio-metadata",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "",
   "main": "dist/parseAudioMetadata.js",
-  "module": "dist/parseAudioMetadata.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["audio", "metadata", "parser", "mp3", "flac", "opus", "ogg", "m4a"],
+  "author": "andriuskv",
+  "license": "MIT",
   "scripts": {
     "start": "npm run dist-dev && npm run watch & live-server dist",
     "dist": "rm -rf dist && mkdir dist",
@@ -32,5 +31,9 @@
     "last 1 edge versions",
     "last 1 and_chr versions",
     "last 1 safari versions"
-  ]
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andriuskv/parse-audio-metadata.git"
+  }
 }
