@@ -17,9 +17,8 @@ function bytesToNum(bytes) {
   return bytes.reduce((result, byte) => (result << 8) + byte, 0);
 }
 
-async function parseBlocks(file, buffer) {
+async function parseBlocks(file, buffer, offset = 4) {
   let tags = {};
-  let offset = 4;
   let isLastBlock = false;
 
   while (!isLastBlock) {

@@ -281,7 +281,7 @@ function createCommonjsModule(fn, module) {
 }
 
 var _core = createCommonjsModule(function (module) {
-var core = module.exports = { version: '2.6.3' };
+var core = module.exports = { version: '2.6.9' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 });
 var _core_1 = _core.version;
@@ -295,8 +295,6 @@ var global = module.exports = typeof window != 'undefined' && window.Math == Mat
 if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 });
 
-var _library = false;
-
 var _shared = createCommonjsModule(function (module) {
 var SHARED = '__core-js_shared__';
 var store = _global[SHARED] || (_global[SHARED] = {});
@@ -305,7 +303,7 @@ var store = _global[SHARED] || (_global[SHARED] = {});
   return store[key] || (store[key] = value !== undefined ? value : {});
 })('versions', []).push({
   version: _core.version,
-  mode: _library ? 'pure' : 'global',
+  mode:  'global',
   copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
 });
 });
@@ -590,14 +588,16 @@ var _has = function (it, key) {
   return hasOwnProperty.call(it, key);
 };
 
+var _functionToString = _shared('native-function-to-string', Function.toString);
+
 var _redefine = createCommonjsModule(function (module) {
 var SRC = _uid('src');
+
 var TO_STRING = 'toString';
-var $toString = Function[TO_STRING];
-var TPL = ('' + $toString).split(TO_STRING);
+var TPL = ('' + _functionToString).split(TO_STRING);
 
 _core.inspectSource = function (it) {
-  return $toString.call(it);
+  return _functionToString.call(it);
 };
 
 (module.exports = function (O, key, val, safe) {
@@ -617,7 +617,7 @@ _core.inspectSource = function (it) {
   }
 // add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
 })(Function.prototype, TO_STRING, function toString() {
-  return typeof this == 'function' && this[SRC] || $toString.call(this);
+  return typeof this == 'function' && this[SRC] || _functionToString.call(this);
 });
 });
 
@@ -785,7 +785,7 @@ var LAST_INDEX$1 = 'lastIndex';
 var MAX_UINT32 = 0xffffffff;
 
 // babel-minify transpiles RegExp('x', 'y') -> /x/y and it causes SyntaxError
-var SUPPORTS_Y = !_fails(function () { });
+var SUPPORTS_Y = !_fails(function () { RegExp(MAX_UINT32, 'y'); });
 
 // @@split logic
 _fixReWks('split', 2, function (defined, SPLIT, $split, maybeCallNative) {
@@ -990,9 +990,8 @@ function bytesToNum(bytes) {
   return bytes.reduce((result, byte) => (result << 8) + byte, 0);
 }
 
-async function parseBlocks(file, buffer) {
+async function parseBlocks(file, buffer, offset = 4) {
   let tags = {};
-  let offset = 4;
   let isLastBlock = false;
 
   while (!isLastBlock) {
@@ -1216,13 +1215,27 @@ function traverseAtoms(buffer) {
   return tags;
 }
 
+function getID3TagSize(buffer) {
+  const bytes = getBytes(buffer, 6, 4);
+  return bytes[0] * 2097152 + bytes[1] * 16384 + bytes[2] * 128 + bytes[3];
+}
+
 async function parseFile(file, buffer) {
   const bytes = getBytes(buffer, 0, 8);
   const string = decode(bytes);
 
   if (string.startsWith("ID3")) {
     if (bytes[3] < 3) {
-      throw new Error("Unsupported version");
+      throw new Error("Unsupported ID3 tag version");
+    } // +10 to skip tag header
+
+
+    const size = getID3TagSize(buffer) + 10;
+    buffer = await increaseBuffer(file, buffer.byteLength + size + 1024);
+    const string = decode(getBytes(buffer, size, 4));
+
+    if (string === "fLaC") {
+      return parseBlocks(file, buffer, size + 4);
     }
 
     return parseID3Tag(file, buffer, bytes[3]);
@@ -1236,7 +1249,7 @@ async function parseFile(file, buffer) {
     return traverseAtoms(buffer);
   }
 
-  throw new Error("Unsupported file");
+  throw new Error("Invalid or unsupported file");
 }
 
 function parseAudioMetadata(file) {
