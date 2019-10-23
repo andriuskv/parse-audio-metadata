@@ -10,8 +10,7 @@ export default {
   },
   plugins: [
     resolve({
-      jsnext: true,
-      main: true,
+      mainFields: ["module", "main"],
       browser: true
     }),
     commonjs(),
@@ -20,8 +19,7 @@ export default {
       babelrc: false,
       presets: [["@babel/preset-env", {
         modules: false,
-        loose: true,
-        useBuiltIns: "usage"
+        loose: true
       }]]
     })
   ]

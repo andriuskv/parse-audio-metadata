@@ -20,7 +20,7 @@ function decodeFrame(buffer, offset, size) {
   if (firstByte === 0) {
     const string = decode(bytes, "iso-8859-1");
 
-    return string.slice(1);
+    return bytes[bytes.length - 1] === 0 ? string.slice(1, -1) : string.slice(1);
   }
   else if (firstByte === 1) {
     const encoding = bytes[1] === 255 && bytes[2] === 254 ? "utf-16le" : "utf-16be";
@@ -29,7 +29,9 @@ function decodeFrame(buffer, offset, size) {
     if (encoding === "utf-16be") {
       stringBytes[0] = 0;
     }
-    return decode(stringBytes, encoding);
+    const string = decode(stringBytes, encoding);
+
+    return bytes[bytes.length - 1] === 0 && bytes[bytes.length - 2] === 0 ? string.slice(0, -1) : string;
   }
   else if (firstByte === 2) {
     const stringBytes = bytes.length % 2 === 0 ? bytes.slice(1, -1) : bytes.slice(1);
@@ -143,7 +145,7 @@ async function parseID3Tag(file, buffer, version, offset = 0, tags = {}) {
   let frameCount = 0;
   let isFirstAudioFrame = true;
 
-  while (true) {
+  while (offset < buffer.byteLength) {
     const bytes = getBytes(buffer, offset, 4);
 
     if (bytes[0] !== 255 || bytes[1] < 112) {
@@ -165,6 +167,8 @@ async function parseID3Tag(file, buffer, version, offset = 0, tags = {}) {
     frameCount += 1;
     offset += getAudioFrameSize(bytes[2], tags);
   }
+  tags.duration = getDuration(frameCount, tags);
+  return tags;
 }
 
 function getAudioFrameSize(byte, { bitrate, sampleRate }) {
