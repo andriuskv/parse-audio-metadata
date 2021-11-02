@@ -1,7 +1,7 @@
 import { sliceBytes, decode, unpackBytes } from "./helpers.js";
 
 function convertBase64ToUint8(data) {
-  const raw = window.atob(data);
+  const raw = atob(data);
   const array = new Uint8Array(raw.length);
 
   for (let i = 0; i < raw.length; i++) {
