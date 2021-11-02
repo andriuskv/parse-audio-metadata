@@ -271,7 +271,7 @@ function mapFrameIdToField(id) {
 }
 
 function convertBase64ToUint8(data) {
-  const raw = window.atob(data);
+  const raw = atob(data);
   const array = new Uint8Array(raw.length);
 
   for (let i = 0; i < raw.length; i++) {
@@ -600,7 +600,8 @@ async function parseFile(file, buffer) {
 
     const size = getID3TagSize(buffer) + 10;
     buffer = await increaseBuffer(file, buffer.byteLength + size + 1024);
-    const string = decode(getBytes(buffer, size, 4));
+    const string = decode(getBytes(buffer, size, 4)); // Edge case when there is ID3 tag embedded in .flac file.
+    // Instead of parsing ID3 tag - ignore it and treat it as normal .flac file.
 
     if (string === "fLaC") {
       return parseBlocks(file, buffer, size + 4);
@@ -635,4 +636,4 @@ function parseAudioMetadata(file) {
   });
 }
 
-export default parseAudioMetadata;
+export { parseAudioMetadata as default };

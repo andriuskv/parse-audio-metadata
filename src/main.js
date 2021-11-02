@@ -23,6 +23,8 @@ async function parseFile(file, buffer) {
     buffer = await increaseBuffer(file, buffer.byteLength + size + 1024);
     const string = decode(getBytes(buffer, size, 4));
 
+    // Edge case when there is ID3 tag embedded in .flac file.
+    // Instead of parsing ID3 tag - ignore it and treat it as normal .flac file.
     if (string === "fLaC") {
       return parseFlacFile(file, buffer, size + 4);
     }
