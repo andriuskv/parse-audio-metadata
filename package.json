@@ -1,7 +1,8 @@
 {
   "name": "parse-audio-metadata",
-  "version": "1.0.3",
-  "description": "Audio file metadata parser for browser",
+  "version": "1.0.5",
+  "description": "Audio file metadata parser for a browser",
+  "type": "module",
   "main": "dist/parseAudioMetadata.js",
   "keywords": [
     "audio",
@@ -23,23 +24,24 @@
     "build": "npm run dist && rollup -c"
   },
   "devDependencies": {
-    "@babel/core": "^7.6.4",
-    "@babel/polyfill": "^7.6.0",
-    "@babel/preset-env": "^7.6.3",
-    "babel-eslint": "^10.0.3",
-    "eslint": "^6.5.1",
+    "@babel/core": "^7.16.0",
+    "@babel/eslint-parser": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
+    "core-js": "^3.19.0",
+    "eslint": "^8.1.0",
     "live-server": "^1.2.1",
-    "rollup": "^1.25.2",
-    "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0"
+    "rollup": "^2.59.0",
+    "@rollup/plugin-babel": "^5.3.0",
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-node-resolve": "^13.0.6"
   },
   "browserslist": [
     "last 4 chrome versions",
     "last 4 firefox versions",
-    "last 1 edge versions",
     "last 1 and_chr versions",
-    "last 1 safari versions"
+    "last 1 and_ff versions",
+    "last 1 safari versions",
+    "last 1 ios_saf versions"
   ],
   "repository": {
     "type": "git",
