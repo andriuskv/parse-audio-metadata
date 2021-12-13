@@ -3,7 +3,7 @@
 Audio file metadata parser for a browser.
 
 ### Supported audio file types
-mp3 with ID3v2.3 and ID3v2.4 headers, flac, opus, ogg and m4a.
+mp3 with ID3v2.3 and ID3v2.4 headers, flac, opus, ogg, wav and m4a.
 
 ### Installation
 
