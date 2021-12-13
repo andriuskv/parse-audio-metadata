@@ -3,6 +3,7 @@ import parseMp3File from "./parseMp3File.js";
 import parseFlacFile from "./parseFlacFile.js";
 import parseOggOpusFile from "./parseOggOpusFile.js";
 import parseM4aFile from "./parseM4aFile.js";
+import parseWavFile from "./parseWavFile.js";
 
 // http://id3lib.sourceforge.net/id3/id3v2com-00.html
 function getID3TagSize(buffer) {
@@ -40,6 +41,9 @@ async function parseFile(file, buffer) {
   else if (string.endsWith("ftyp")) {
     buffer = await increaseBuffer(file);
     return parseM4aFile(buffer);
+  }
+  else if (string.startsWith("RIFF")) {
+    return parseWavFile(buffer);
   }
   throw new Error("Invalid or unsupported file");
 }
