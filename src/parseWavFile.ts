@@ -1,8 +1,8 @@
-import { getBytes, unpackBytes, decode } from "./helpers.js";
+import { getBytes, unpackBytes, decode } from "./helpers.ts";
 
 // http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 
-async function parseWavFile(buffer, offset = 4) {
+async function parseWavFile(buffer: ArrayBuffer, offset = 4) {
   // Jump to "fmt " chunk size
   offset += 12;
 
@@ -28,7 +28,7 @@ async function parseWavFile(buffer, offset = 4) {
   }
 }
 
-function getFmtChunkData(buffer, offset) {
+function getFmtChunkData(buffer: ArrayBuffer, offset: number) {
   offset += 4;
 
   const sampleRateBytes = getBytes(buffer, offset, 4);
@@ -45,7 +45,7 @@ function getFmtChunkData(buffer, offset) {
   };
 }
 
-function findDataChunk(buffer, offset) {
+function findDataChunk(buffer: ArrayBuffer, offset: number) {
   while (offset < buffer.byteLength) {
     const bytes = getBytes(buffer, offset, 4);
     const chunkId = decode(bytes);
@@ -65,6 +65,7 @@ function findDataChunk(buffer, offset) {
     // Jump to the next chunk
     offset += 4 + chunkSize;
   }
+  return offset;
 }
 
 export default parseWavFile;

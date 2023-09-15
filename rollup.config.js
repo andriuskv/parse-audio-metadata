@@ -1,22 +1,12 @@
-import { babel } from "@rollup/plugin-babel";
+import typescript from "@rollup/plugin-typescript";
 
 export default {
-  input: "src/main.js",
+  input: "src/main.ts",
   output: {
     file: "dist/parseAudioMetadata.js",
     format: "es"
   },
   plugins: [
-    babel({
-      exclude: "node_modules/**",
-      babelHelpers: "bundled",
-      presets: [["@babel/preset-env", {
-        modules: false,
-        bugfixes: true,
-        loose: true,
-        useBuiltIns: "usage",
-        corejs: 3
-      }]]
-    })
+    typescript()
   ]
 };

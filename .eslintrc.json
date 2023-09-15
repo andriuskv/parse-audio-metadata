@@ -1,6 +1,6 @@
 {
   "root": true,
-  "parser": "@babel/eslint-parser",
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "sourceType": "module",
     "requireConfigFile": false
@@ -15,8 +15,13 @@
     "node": true,
     "worker": true
   },
+  "plugins": [
+    "@typescript-eslint"
+  ],
   "extends": [
-    "eslint:recommended"
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
     "array-callback-return": 2,
@@ -94,4 +99,5 @@
     "valid-typeof": 2,
     "valid-jsdoc": 2,
     "wrap-iife": [2, "inside"]
+  }
 }
