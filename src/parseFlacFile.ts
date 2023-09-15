@@ -1,10 +1,19 @@
-import { getBytes, unpackBytes, increaseBuffer } from "./helpers.js";
-import { parseVorbisComment, parsePictureBlock } from "./vorbisComment.js";
+import { getBytes, unpackBytes, getBuffer } from "./helpers.ts";
+import { parseVorbisComment, parsePictureBlock } from "./vorbisComment.ts";
+
+interface Tags {
+  [key: string]: number | string | Blob
+}
+
+function bytesToNum(bytes: Uint8Array) {
+  return bytes.reduce((result, byte) => (result << 8) + byte, 0);
+}
 
 // https://xiph.org/flac/format.html#metadata_block_streaminfo
-function parseStreamInfoBlock(bytes, tags) {
+function parseStreamInfoBlock(bytes: Uint8Array, tags: Tags) {
   const sampleRate = bytesToNum(bytes.slice(10, 13)) >> 4;
-  const sampleBytes = [bytes[13] & 0x0F, ...bytes.slice(14, 18)];
+  // const sampleBytes = [bytes[13] & 0x0F, ...bytes.slice(14, 18)];
+  const sampleBytes = new Uint8Array([bytes[13] & 0x0F, ...bytes.slice(14, 18)]);
   const totalSamples = bytesToNum(sampleBytes);
 
   if (sampleRate) {
@@ -13,12 +22,8 @@ function parseStreamInfoBlock(bytes, tags) {
   return tags;
 }
 
-function bytesToNum(bytes) {
-  return bytes.reduce((result, byte) => (result << 8) + byte, 0);
-}
-
-async function parseBlocks(file, buffer, offset = 4) {
-  let tags = {};
+async function parseBlocks(file: File, buffer: ArrayBuffer, offset = 4) {
+  let tags: Tags = {};
   let isLastBlock = false;
 
   while (!isLastBlock) {
@@ -31,7 +36,7 @@ async function parseBlocks(file, buffer, offset = 4) {
     offset += 4;
 
     if (offset + length > buffer.byteLength) {
-      buffer = await increaseBuffer(file, buffer.byteLength + offset + length);
+      buffer = await getBuffer(file, buffer.byteLength + offset + length);
     }
 
     if (blockType === 0) {

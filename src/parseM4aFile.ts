@@ -1,11 +1,15 @@
-import { getBytes, decode, unpackBytes } from "./helpers.js";
+import { getBytes, decode, unpackBytes } from "./helpers.ts";
 
-function getAtomSize(buffer, offset) {
+interface Tags {
+  [key: string]: number | string | Blob
+}
+
+function getAtomSize(buffer: ArrayBuffer, offset: number) {
   return unpackBytes(getBytes(buffer, offset, 4), { endian: "big", byteCount: 4 });
 }
 
 // https://developer.apple.com/library/archive/documentation/QuickTime/QTFF/QTFFChap2/qtff2.html#//apple_ref/doc/uid/TP40000939-CH204-56313
-function parseMovieHeaderAtom(buffer, offset) {
+function parseMovieHeaderAtom(buffer: ArrayBuffer, offset: number) {
   const version = new DataView(buffer, offset, 1).getUint8(0);
   let timeUnitPerSecond = 0;
   let durationInTimeUnits = 0;
@@ -30,7 +34,7 @@ function parseMovieHeaderAtom(buffer, offset) {
   return Math.floor(durationInTimeUnits / timeUnitPerSecond);
 }
 
-function getMIMEType(bytes) {
+function getMIMEType(bytes: Uint8Array) {
   if (bytes[0] === 255 && bytes[1] === 216) {
     return "image/jpg";
   }
@@ -40,7 +44,7 @@ function getMIMEType(bytes) {
   return "";
 }
 
-function parseMetadataItemListAtom(buffer, offset, atomSize, tags) {
+function parseMetadataItemListAtom(buffer: ArrayBuffer, offset: number, atomSize: number, tags: Tags) {
   const atomTypeToField = {
     "\xA9ART": "artist",
     "\xA9nam": "title",
@@ -54,7 +58,7 @@ function parseMetadataItemListAtom(buffer, offset, atomSize, tags) {
   while (atomSize) {
     const size = getAtomSize(buffer, offset);
     const type = decode(getBytes(buffer, offset + 4, 4), "iso-8859-1");
-    const field = atomTypeToField[type];
+    const field = atomTypeToField[type as keyof typeof atomTypeToField];
 
     // Jump size length, atom type and skip flags and reserved bytes
     const headerSize = 24;
@@ -78,9 +82,9 @@ function parseMetadataItemListAtom(buffer, offset, atomSize, tags) {
 
 // http://xhelmboyx.tripod.com/formats/mp4-layout.txt
 // https://developer.apple.com/library/archive/documentation/QuickTime/QTFF/Metadata/Metadata.html
-function traverseAtoms(buffer) {
+function traverseAtoms(buffer: ArrayBuffer) {
   const atoms = ["moov", "mvhd", "udta", "meta", "ilst"];
-  let tags = {};
+  let tags: Tags = {};
   let offset = 0;
 
   while (atoms.length && offset < buffer.byteLength) {

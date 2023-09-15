@@ -1,7 +1,11 @@
-import { getBytes, sliceBytes, decode, unpackBytes } from "./helpers.js";
-import { parseVorbisComment } from "./vorbisComment.js";
+import { getBytes, sliceBytes, decode, unpackBytes } from "./helpers.ts";
+import { parseVorbisComment } from "./vorbisComment.ts";
 
-function mergeTypedArrays(a, b) {
+interface Tags {
+  [key: string]: number | string | Blob
+}
+
+function mergeTypedArrays(a: Uint8Array, b: Uint8Array) {
   const c = new Uint8Array(a.length + b.length);
 
   c.set(a);
@@ -11,12 +15,12 @@ function mergeTypedArrays(a, b) {
 
 // https://tools.ietf.org/html/rfc7845#section-5.1
 // https://xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-630004.2.2
-function parseIdHeader(bytes, tags) {
+function parseIdHeader(bytes: Uint8Array, tags: Tags) {
   tags.sampleRate = unpackBytes(sliceBytes(bytes, 12, 4), { endian: "little" });
   return tags;
 }
 
-function parseSegment(segment, tags) {
+function parseSegment(segment: Uint8Array, tags: Tags) {
   const type = decode(sliceBytes(segment, 0, 5));
 
   if (type === "OpusH" || type === "\x01vorb") {
@@ -32,8 +36,8 @@ function parseSegment(segment, tags) {
 }
 
 // https://en.wikipedia.org/wiki/Ogg#Page_structure
-function parsePages(buffer) {
-  let tags = {};
+function parsePages(buffer: ArrayBuffer) {
+  let tags: Tags = {};
   let offset = 0;
   let headersToFind = 2;
   let segment = new Uint8Array();
@@ -47,7 +51,7 @@ function parsePages(buffer) {
     // 4 = end of stream
     if (headerType === 4) {
       const samples = unpackBytes(getBytes(buffer, offset, 4), { endian: "little" });
-      tags.duration = Math.floor(samples / tags.sampleRate);
+      tags.duration = Math.floor(samples / (tags.sampleRate as number));
 
       return tags;
     }

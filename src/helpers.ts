@@ -1,12 +1,18 @@
-function getBytes(buffer, offset, count) {
+function getBytes(buffer: ArrayBuffer, offset: number, count: number) {
   return new Uint8Array(buffer, offset, count);
 }
 
-function sliceBytes(bytes, offset, count) {
+function sliceBytes(bytes: Uint8Array, offset: number, count: number) {
   return bytes.slice(offset, offset + count);
 }
 
-function unpackBytes(bytes, options = {}) {
+interface Options {
+ endian: "big" | "little";
+ shiftBase?: number;
+ byteCount?: number;
+}
+
+function unpackBytes(bytes: Uint8Array, options: Partial<Options>) {
   if (options.endian === "little") {
     return bytes[0] | bytes[1] << 8 | bytes[2] << 16 | bytes[3] << 24;
   }
@@ -21,22 +27,16 @@ function unpackBytes(bytes, options = {}) {
   return value;
 }
 
-function decode(bytes, encoding) {
+function decode(bytes: Uint8Array, encoding: string = "utf-8") {
   const decoder = new TextDecoder(encoding);
 
   return decoder.decode(bytes);
 }
 
-function increaseBuffer(file, size) {
-  return new Promise(resolve => {
-    const fileReader = new FileReader();
-    const slicedFile = size ? file.slice(0, Math.min(size, file.size)) : file;
+function getBuffer(file: File, size?: number): Promise<ArrayBuffer> {
+  const slicedFile = size ? file.slice(0, Math.min(size, file.size)) : file;
 
-    fileReader.onloadend = function({ target }) {
-      resolve(target.result);
-    };
-    fileReader.readAsArrayBuffer(slicedFile);
-  });
+  return slicedFile.arrayBuffer();
 }
 
 export {
@@ -44,5 +44,5 @@ export {
   sliceBytes,
   unpackBytes,
   decode,
-  increaseBuffer
+  getBuffer
 };
