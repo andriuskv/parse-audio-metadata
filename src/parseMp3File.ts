@@ -156,6 +156,10 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
         }
         else {
           tags[field] = decodeFrame(buffer, frameOffset, size);
+
+          if (field === "duration") {
+            tags[field] = Math.floor(Number.parseInt(tags[field] as string, 10) / 1000);
+          }
         }
       }
     }
@@ -168,6 +172,10 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
       break;
     }
     offset += frameSize;
+  }
+
+  if (tags.duration) {
+    return tags;
   }
 
   // Skip padding
@@ -239,6 +247,7 @@ function mapFrameIdToField(id: string) {
     TIT2: "title",
     TPE1: "artist",
     TALB: "album",
+    TLEN: "duration",
     APIC: "picture"
   };
   return map[id as keyof typeof map];
