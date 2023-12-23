@@ -32,6 +32,12 @@ const bitratesByVersionAndLayer = [
   [null, version1layer3, version1layer2, version1layer1]
 ];
 
+function getBit(value: number, pos: number) {
+  const mask = 1 << pos;
+  const result = value & mask;
+  return result;
+}
+
 // Used to get ID3 tag size and ID3v2.4 frame size
 function getSize(buffer: ArrayBuffer, offset: number) {
   return unpackBytes(getBytes(buffer, offset, 4), { endian: "big", shiftBase: 7 });
@@ -138,8 +144,8 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
     const frameSize = getFrameSize(buffer, offset, version);
     offset += 4;
 
-    const [encodingFlagByte] = getBytes(buffer, offset + 1, 2);
-    const usesCompression = (encodingFlagByte >> 1) % 2 !== 0;
+    const frameFlagBytes = getBytes(buffer, offset + 1, 2);
+    const usesCompression = getBit(frameFlagBytes[1], 3);
     offset += 2;
 
     if (id) {
