@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
+    "sourceMap": true,
     "allowImportingTsExtensions": true,
     "noUnusedLocals": true,
     "strict": true,
