@@ -94,8 +94,9 @@ function getPictureDataLength(bytes: Uint8Array, offset: number) {
   return length;
 }
 
-// http://id3.org/id3v2.4.0-frames
+// https://github.com/id3/ID3v2.4/blob/master/id3v2.4.0-frames.txt
 function getPicture(buffer: ArrayBuffer, offset: number, size: number) {
+  // Start with 1 to skip description text encoding
   let pictureOffset = 1;
   const bytes = getBytes(buffer, offset, size);
   const MIMETypeLength = getPictureDataLength(bytes, pictureOffset);
@@ -116,6 +117,7 @@ function getPicture(buffer: ArrayBuffer, offset: number, size: number) {
   return new Blob([bytes.slice(pictureOffset)], { type: MIMEType });
 }
 
+// https://github.com/id3/ID3v2.4/blob/master/id3v2.40-structure.txt
 async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, offset = 0, tags: Tags = {}) {
   const initialOffset = offset;
 
@@ -150,6 +152,10 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
         frameOffset += 4;
       }
 
+      if (frameOffset + size > buffer.byteLength) {
+        buffer = await getBuffer(file);
+      }
+
       if (field && !tags[field]) {
         if (field === "picture") {
           tags[field] = getPicture(buffer, frameOffset, size);
@@ -164,7 +170,8 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
       }
     }
     else {
-      offset = initialOffset + tagSize;
+      // Remove tag header offset
+      offset -= 10;
 
       if (decode(getBytes(buffer, offset, 3)) === "ID3") {
         return parseID3Tag(file, buffer, version, offset, tags);
@@ -201,7 +208,10 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
       if (id === "Xing" || id === "Info") {
         return parseXingHeader(buffer, offset + frameHeaderSize, tags);
       }
-      buffer = await getBuffer(file);
+
+      if (buffer.byteLength < file.size) {
+        buffer = await getBuffer(file);
+      }
       isFirstAudioFrame = false;
     }
     frameCount += 1;
