@@ -1,6 +1,6 @@
 {
   "name": "parse-audio-metadata",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Audio file metadata parser for a browser",
   "author": "andriuskv",
   "license": "MIT",
