@@ -50,12 +50,36 @@ function getFrameSize(buffer: ArrayBuffer, offset: number, version: number) {
   return getSize(buffer, offset);
 }
 
-// http://id3.org/id3v2.4.0-structure
-function decodeFrame(buffer: ArrayBuffer, offset: number, size: number) {
+/*
+The first byte tells the encoding:
+    $00   ISO-8859-1 [ISO-8859-1]. Terminated with $00.
+    $01   UTF-16 [UTF-16] encoded Unicode [UNICODE] with BOM. All
+        strings in the same frame SHALL have the same byteorder.
+        Terminated with $00 00.
+    $02   UTF-16BE [UTF-16] encoded Unicode [UNICODE] without BOM.
+        Terminated with $00 00.
+    $03   UTF-8 [UTF-8] encoded Unicode [UNICODE]. Terminated with $00.
+*/
+function decodeFrame(buffer: ArrayBuffer, offset: number, size: number, unsynchronisation: number) {
   const bytes = getBytes(buffer, offset, size);
   const [firstByte] = bytes;
 
   if (firstByte === 0) {
+    if (unsynchronisation > 0) {
+      let offset = -1;
+
+      for (let i = 2; i < bytes.length; i += 1) {
+        if (bytes[i - 2] === 255 && bytes[i - 1] === 0 && bytes[i] === 254) {
+            offset = i + 1;
+            break;
+        }
+      }
+
+      if (offset > 0) {
+        const stringBytes = bytes.slice(offset).filter(byte => Boolean(byte));
+        return decode(stringBytes, "iso-8859-1");
+      }
+    }
     const string = decode(bytes, "iso-8859-1");
 
     return bytes[bytes.length - 1] === 0 ? string.slice(1, -1) : string.slice(1);
@@ -124,6 +148,12 @@ function getPicture(buffer: ArrayBuffer, offset: number, size: number) {
 }
 
 // https://github.com/id3/ID3v2.4/blob/master/id3v2.40-structure.txt
+/*
+  ID3v2/file identifier      "ID3"
+  ID3v2 version              $04 00
+  ID3v2 flags                %abcd0000
+  ID3v2 size             4 * %0xxxxxxx
+*/
 async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, offset = 0, tags: Tags = {}) {
   const initialOffset = offset;
 
@@ -138,14 +168,20 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
     buffer = await getBuffer(file, initialOffset + tagSize + buffer.byteLength);
   }
 
+  /*
+    Frame ID      $xx xx xx xx  (four characters)
+    Size      4 * %0xxxxxxx
+    Flags         $xx xx
+  */
   while (true) {
     const id = getFrameId(buffer, offset);
     offset += 4;
     const frameSize = getFrameSize(buffer, offset, version);
     offset += 4;
 
-    const frameFlagBytes = getBytes(buffer, offset + 1, 2);
+    const frameFlagBytes = getBytes(buffer, offset, 2);
     const usesCompression = getBit(frameFlagBytes[1], 3);
+    const unsynchronisation = getBit(frameFlagBytes[1], 1);
     offset += 2;
 
     if (id) {
@@ -167,7 +203,7 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
           tags[field] = getPicture(buffer, frameOffset, size);
         }
         else {
-          tags[field] = decodeFrame(buffer, frameOffset, size);
+          tags[field] = decodeFrame(buffer, frameOffset, size, unsynchronisation);
 
           if (field === "duration") {
             tags[field] = Math.floor(Number.parseInt(tags[field] as string, 10) / 1000);
