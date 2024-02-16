@@ -3,11 +3,11 @@
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "sourceType": "module",
-    "requireConfigFile": false
-  },
-  "ecmaVersion": "latest",
-  "ecmaFeatures": {
-    "modules": true
+    "requireConfigFile": false,
+    "ecmaVersion": "latest",
+    "ecmaFeatures": {
+      "modules": true
+    }
   },
   "env": {
     "browser": true,

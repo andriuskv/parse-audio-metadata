@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": "src",
     "target": "esnext",
-    "module": "esnext",
+    "module": "nodenext",
     "lib": ["DOM", "ESNext", "WebWorker"],
     "isolatedModules": true,
     "skipLibCheck": true,

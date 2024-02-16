@@ -70,8 +70,8 @@ function decodeFrame(buffer: ArrayBuffer, offset: number, size: number, unsynchr
 
       for (let i = 2; i < bytes.length; i += 1) {
         if (bytes[i - 2] === 255 && bytes[i - 1] === 0 && bytes[i] === 254) {
-            offset = i + 1;
-            break;
+          offset = i + 1;
+          break;
         }
       }
 
@@ -154,7 +154,7 @@ function getPicture(buffer: ArrayBuffer, offset: number, size: number) {
   ID3v2 flags                %abcd0000
   ID3v2 size             4 * %0xxxxxxx
 */
-async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, offset = 0, tags: Tags = {}) {
+async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | Blob, offset = 0, tags: Tags = {}) {
   const initialOffset = offset;
 
   // Skip identifier, version, flags
@@ -164,7 +164,7 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
   const tagSize = getSize(buffer, offset) + 10;
   offset += 4;
 
-  if (initialOffset + tagSize > buffer.byteLength) {
+  if (file && initialOffset + tagSize > buffer.byteLength) {
     buffer = await getBuffer(file, initialOffset + tagSize + buffer.byteLength);
   }
 
@@ -194,7 +194,7 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
         frameOffset += 4;
       }
 
-      if (frameOffset + size > buffer.byteLength) {
+      if (file && frameOffset + size > buffer.byteLength) {
         buffer = await getBuffer(file);
       }
 
@@ -216,7 +216,7 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
       offset -= 10;
 
       if (decode(getBytes(buffer, offset, 3)) === "ID3") {
-        return parseID3Tag(file, buffer, version, offset, tags);
+        return parseID3Tag(buffer, version, file, offset, tags);
       }
       break;
     }
@@ -251,7 +251,7 @@ async function parseID3Tag(file: File, buffer: ArrayBuffer, version: number, off
         return parseXingHeader(buffer, offset + frameHeaderSize, tags);
       }
 
-      if (buffer.byteLength < file.size) {
+      if (file && buffer.byteLength < file.size) {
         buffer = await getBuffer(file);
       }
       isFirstAudioFrame = false;
