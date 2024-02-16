@@ -5,8 +5,6 @@ import parseOggOpusFile from "./parseOggOpusFile.ts";
 import parseM4aFile from "./parseM4aFile.ts";
 import parseWavFile from "./parseWavFile.ts";
 
-const isNode = typeof window === "undefined" && typeof global !== "undefined";
-
 // http://id3lib.sourceforge.net/id3/id3v2com-00.html
 function getID3TagSize(buffer: ArrayBuffer) {
   const bytes = getBytes(buffer, 6, 4);
@@ -58,20 +56,11 @@ async function parseFile(buffer: ArrayBuffer, file?: File | Blob) {
   throw new Error("Invalid or unsupported file.");
 }
 
-async function parseAudioMetadata(input: File | ArrayBuffer | string) {
+async function parseAudioMetadata(input: File | ArrayBuffer) {
   if (input instanceof ArrayBuffer) {
     return parseFile(input);
   }
-  let blob: File | Blob = input as File;
-
-  if (isNode && typeof input === "string") {
-    try {
-      const { openAsBlob } = await import("node:fs");
-      blob = await openAsBlob(input);
-    } catch (e) {
-      throw new Error("Unable to open file path.");
-    }
-  }
+  const blob: File | Blob = input as File;
   const buffer = await getBuffer(blob, 24 * 1024);
 
   return parseFile(buffer, blob);
