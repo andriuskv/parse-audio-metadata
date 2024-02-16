@@ -7,7 +7,7 @@ async function parseWavFile(buffer: ArrayBuffer, offset = 4) {
   offset += 12;
 
   const chunkSizeBytes = getBytes(buffer, offset, 4);
-  let chunkSize = unpackBytes(chunkSizeBytes, { endian: "little" });
+  const chunkSize = unpackBytes(chunkSizeBytes, { endian: "little" });
 
   offset += 4;
 
@@ -25,7 +25,7 @@ async function parseWavFile(buffer: ArrayBuffer, offset = 4) {
   return {
     sampleRate,
     duration: Math.floor(samples / dataRate)
-  }
+  };
 }
 
 function getFmtChunkData(buffer: ArrayBuffer, offset: number) {

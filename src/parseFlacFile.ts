@@ -22,7 +22,7 @@ function parseStreamInfoBlock(bytes: Uint8Array, tags: Tags) {
   return tags;
 }
 
-async function parseBlocks(file: File, buffer: ArrayBuffer, offset = 4) {
+async function parseBlocks(buffer: ArrayBuffer, file?: File | Blob, offset = 4) {
   let tags: Tags = {};
   let isLastBlock = false;
 
@@ -35,7 +35,7 @@ async function parseBlocks(file: File, buffer: ArrayBuffer, offset = 4) {
     isLastBlock = (firstByte & 0x80) === 0x80;
     offset += 4;
 
-    if (offset + length > buffer.byteLength) {
+    if (file && offset + length > buffer.byteLength) {
       buffer = await getBuffer(file, buffer.byteLength + offset + length);
     }
 

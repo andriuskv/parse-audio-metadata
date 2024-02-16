@@ -39,20 +39,25 @@
 
       document.getElementById("file-input").addEventListener("change", async ({ target }) => {
         for (const file of target.files) {
-          const tags = await parseAudioMetadata(file);
-          console.log(tags);
+          try {
+            console.log(file.name);
+            const tags = await parseAudioMetadata(file);
+            console.log(tags);
 
-          document.getElementById("files").insertAdjacentHTML("beforeend", `
-            <li>
-              ${tags.picture ? `<img src="${URL.createObjectURL(tags.picture)}" alt="">` : ""}
-              <div>
-                <div>Artist: ${tags.artist}</div>
-                <div>Title: ${tags.title}</div>
-                <div>Album: ${tags.album}</div>
-                <div>Duration: ${tags.duration}</div>
-              </div>
-            </li>
-          `);
+            document.getElementById("files").insertAdjacentHTML("beforeend", `
+              <li>
+                ${tags.picture ? `<img src="${URL.createObjectURL(tags.picture)}" alt="">` : ""}
+                <div>
+                  <div>Artist: ${tags.artist}</div>
+                  <div>Title: ${tags.title}</div>
+                  <div>Album: ${tags.album}</div>
+                  <div>Duration: ${tags.duration}</div>
+                </div>
+              </li>
+            `);
+          } catch (e) {
+            console.log(e);
+          }
         }
       });
   </script>

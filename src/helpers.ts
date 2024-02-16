@@ -33,7 +33,7 @@ function decode(bytes: Uint8Array, encoding: string = "utf-8") {
   return decoder.decode(bytes);
 }
 
-function getBuffer(file: File, size?: number): Promise<ArrayBuffer> {
+function getBuffer(file: File | Blob, size?: number): Promise<ArrayBuffer> {
   const slicedFile = size ? file.slice(0, Math.min(size, file.size)) : file;
 
   return slicedFile.arrayBuffer();
