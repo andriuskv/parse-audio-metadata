@@ -10,7 +10,7 @@ npm install parse-audio-metadata
 ```
 
 ### Usage
-The `input` can be of type File, ArrayBuffer, and a string (as a path to the file) in Node.js.
+The `input` can be of type File/Blob, ArrayBuffer.
 
 ```javascript
 import parseAudioMetadata from "parse-audio-metadata";
@@ -22,4 +22,11 @@ or
 const { default: parseAudioMetadata } = await import("parse-audio-metadata");
 
 const metadata = await parseAudioMetadata(input);
+```
+\
+To run in node use code bellow to get the blob.
+```javascript
+import { openAsBlob } from "node:fs";
+
+const blob = await openAsBlob(filePath);
 ```
