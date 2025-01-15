@@ -12,7 +12,7 @@ interface Options {
  byteCount?: number;
 }
 
-function unpackBytes(bytes: Uint8Array, options: Partial<Options>) {
+function unpackBytes(bytes: Uint8Array, options: Options) {
   if (options.endian === "little") {
     return bytes[0] | bytes[1] << 8 | bytes[2] << 16 | bytes[3] << 24;
   }
