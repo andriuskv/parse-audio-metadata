@@ -141,7 +141,7 @@ function getPicture(buffer: ArrayBuffer, offset: number, size: number) {
   pictureOffset += length;
 
   // Description may end in 2 null bytes
-  if (bytes[pictureOffset + length + 1] === 0) {
+  if (bytes[pictureOffset + 1] === 0) {
     pictureOffset += 1;
   }
   return new Blob([bytes.slice(pictureOffset)], { type: MIMEType });

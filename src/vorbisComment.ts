@@ -64,8 +64,9 @@ function parseVorbisComment(bytes: Uint8Array, tags: Tags, offset = 0) {
 
     const userComment = decode(sliceBytes(bytes, offset, userCommentLength), "utf-8");
     const [name, value] = userComment.split("=");
+    const nameInLower = name.toLowerCase();
 
-    if (name === "METADATA_BLOCK_PICTURE") {
+    if (nameInLower === "metadata_block_picture") {
       tags = parsePictureBlock(convertBase64ToUint8(value), tags);
     }
     else {
