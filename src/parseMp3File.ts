@@ -147,27 +147,7 @@ function getPicture(buffer: ArrayBuffer, offset: number, size: number) {
   return new Blob([bytes.slice(pictureOffset)], { type: MIMEType });
 }
 
-// https://github.com/id3/ID3v2.4/blob/master/id3v2.40-structure.txt
-/*
-  ID3v2/file identifier      "ID3"
-  ID3v2 version              $04 00
-  ID3v2 flags                %abcd0000
-  ID3v2 size             4 * %0xxxxxxx
-*/
-async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | Blob, offset = 0, tags: Tags = {}) {
-  const initialOffset = offset;
-
-  // Skip identifier, version, flags
-  offset += 6;
-
-  // +10 to include header size
-  const tagSize = getSize(buffer, offset) + 10;
-  offset += 4;
-
-  if (file && initialOffset + tagSize > buffer.byteLength) {
-    buffer = await getBuffer(file, initialOffset + tagSize + buffer.byteLength);
-  }
-
+async function collectTags(buffer: ArrayBuffer, offset: number, version: number, tags: Tags, file?: File | Blob) {
   /*
     Frame ID      $xx xx xx xx  (four characters)
     Size      4 * %0xxxxxxx
@@ -210,29 +190,68 @@ async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | B
           }
         }
       }
+      offset += frameSize;
     }
     else {
       // Remove tag header offset
       offset -= 10;
 
       if (decode(getBytes(buffer, offset, 3)) === "ID3") {
-        return parseID3Tag(buffer, version, file, offset, tags);
+        return { repeat: true, offset, tags };
       }
       break;
     }
-    offset += frameSize;
   }
-
   if (tags.duration) {
-    return tags;
+    return { offset, tags };
   }
 
   // Skip padding
   while (new DataView(buffer, offset, 1).getUint8(0) === 0) {
     offset += 1;
   }
+  return { offset, tags };
+}
+
+// https://github.com/id3/ID3v2.4/blob/master/id3v2.40-structure.txt
+/*
+  ID3v2/file identifier      "ID3"
+  ID3v2 version              $04 00
+  ID3v2 flags                %abcd0000
+  ID3v2 size             4 * %0xxxxxxx
+*/
+async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | Blob, offset = 0, tags: Tags = {}) {
+  const initialOffset = offset;
+
+  // Skip identifier, version, flags
+  offset += 6;
+
+  // +10 to include header size
+  const tagSize = getSize(buffer, offset) + 10;
+  offset += 4;
+
+  if (file && initialOffset + tagSize > buffer.byteLength) {
+    buffer = await getBuffer(file, initialOffset + tagSize + buffer.byteLength);
+  }
+  let repeat: boolean | undefined = false;
+
+  ({ repeat, offset, tags } = await collectTags(buffer, offset, version, tags, file));
+
+  if (repeat) {
+    return parseID3Tag(buffer, version, file, offset, tags);
+  }
+  else if (tags.duration) {
+    return tags;
+  }
+
+  ({ offset, tags } = await collectTags(buffer, offset, version, tags, file));
+
   let frameCount = 0;
   let isFirstAudioFrame = true;
+
+  if (file && offset > buffer.byteLength) {
+    buffer = await getBuffer(file);
+  }
 
   while (offset < buffer.byteLength) {
     const bytes = getBytes(buffer, offset, 4);
