@@ -243,7 +243,12 @@ async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | B
   else if (tags.duration) {
     return tags;
   }
+  const bytes = getBytes(buffer, offset, 8);
+  const string = decode(bytes);
 
+  if (string.startsWith("ID3")) {
+    return parseID3Tag(buffer, version, file, offset, tags);
+  }
   ({ offset, tags } = await collectTags(buffer, offset, version, tags, file));
 
   let frameCount = 0;
