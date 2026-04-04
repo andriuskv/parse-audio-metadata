@@ -114,6 +114,39 @@ function getFrameId(buffer: ArrayBuffer, offset: number) {
   return /\w{4}/.test(id) ? id : null;
 }
 
+function getDescriptionLength(bytes: Uint8Array, offset: number) {
+  if (bytes[offset] === 0) {
+    return 1;
+  }
+
+  let length = 0;
+
+  // UTF-16LE
+  if (bytes[offset] === 255 && bytes[offset + 1] === 254) {
+    offset += 2;
+    length += 2;
+
+    while (bytes[offset] && bytes[offset + 1] === 0) {
+      offset += 2;
+      length += 2;
+    }
+  }
+  else {
+    while (bytes[offset]) {
+      offset += 1;
+      length += 1;
+    }
+  }
+
+  // Description may end in 2 null bytes
+  if (bytes[offset + 1] === 0) {
+    length += 1;
+  }
+
+  // Terminated by 1 null byte
+  return length + 1;
+}
+
 function getPictureDataLength(bytes: Uint8Array, offset: number) {
   let length = 0;
 
@@ -137,13 +170,9 @@ function getPicture(buffer: ArrayBuffer, offset: number, size: number) {
   pictureOffset += MIMETypeLength + 2;
 
   // Skip description and its terminator
-  const length = getPictureDataLength(bytes, pictureOffset) + 1;
+  const length = getDescriptionLength(bytes, pictureOffset);
   pictureOffset += length;
 
-  // Description may end in 2 null bytes
-  if (bytes[pictureOffset + 1] === 0) {
-    pictureOffset += 1;
-  }
   return new Blob([bytes.slice(pictureOffset)], { type: MIMEType });
 }
 
