@@ -252,6 +252,8 @@ async function collectTags(buffer: ArrayBuffer, offset: number, version: number,
 async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | Blob, offset = 0, tags: Tags = {}) {
   const initialOffset = offset;
 
+  console.log("version", version);
+
   // Skip identifier, version, flags
   offset += 6;
 
@@ -280,12 +282,12 @@ async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | B
   }
   ({ offset, tags } = await collectTags(buffer, offset, version, tags, file));
 
-  let frameCount = 0;
-  let isFirstAudioFrame = true;
-
   if (file && offset > buffer.byteLength) {
     buffer = await getBuffer(file);
   }
+
+  let frameCount = 0;
+  let isFirstAudioFrame = true;
 
   while (offset < buffer.byteLength) {
     const bytes = getBytes(buffer, offset, 4);
@@ -300,8 +302,12 @@ async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | B
       const frameHeaderSize = 36;
       const id = decode(getBytes(buffer, offset + frameHeaderSize, 4));
 
+
       if (id === "Xing" || id === "Info") {
         return parseXingHeader(buffer, offset + frameHeaderSize, tags);
+      }
+      else if (id === "VBRI") {
+        return parseVBRIHeader(buffer, offset + frameHeaderSize, tags);
       }
 
       if (file && buffer.byteLength < file.size) {
@@ -318,11 +324,11 @@ async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | B
 
 function getAudioFrameSize(byte: number, { bitrate, sampleRate }: Tags) {
   const padding = (byte & 0x02) > 0 ? 1 : 0;
-
   return Math.floor(144000 * (bitrate as number) / (sampleRate as number)) + padding;
 }
 
-// https://www.codeproject.com/Articles/8295/MPEG-Audio-Frame-Header#MPEGAudioFrameHeader
+// https://www.datavoyage.com/mpgscript/mpeghdr.htm
+// https://scispace.com/pdf/identification-of-different-patterns-of-mp3-and-duration-20qpa5c3qu.pdf
 function parseAudioFrameHeader(bytes: Uint8Array, data: Tags) {
   const versionIndex = bytes[1] >> 3 & 0x03;
   const layerIndex = bytes[1] >> 1 & 0x03;
@@ -346,6 +352,13 @@ function parseXingHeader(buffer: ArrayBuffer, offset: number, tags: Tags) {
   tags.duration = getDuration(frameCount, tags);
   return tags;
 }
+
+function parseVBRIHeader(buffer: ArrayBuffer, offset: number, tags: Tags) {
+  const frameCount = unpackBytes(getBytes(buffer, offset + 14, 4), { endian: "big" });
+  tags.duration = getDuration(frameCount, tags);
+  return tags;
+}
+
 
 function mapFrameIdToField(id: string) {
   const map = {
