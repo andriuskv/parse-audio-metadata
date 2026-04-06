@@ -252,8 +252,6 @@ async function collectTags(buffer: ArrayBuffer, offset: number, version: number,
 async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | Blob, offset = 0, tags: Tags = {}) {
   const initialOffset = offset;
 
-  console.log("version", version);
-
   // Skip identifier, version, flags
   offset += 6;
 
@@ -292,16 +290,10 @@ async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | B
   while (offset < buffer.byteLength) {
     const bytes = getBytes(buffer, offset, 4);
 
-    if (bytes[0] !== 255 || bytes[1] < 112) {
-      tags.duration = getDuration(frameCount, tags);
-      return tags;
-    }
-
     if (isFirstAudioFrame) {
       tags = parseAudioFrameHeader(bytes, tags);
       const frameHeaderSize = 36;
       const id = decode(getBytes(buffer, offset + frameHeaderSize, 4));
-
 
       if (id === "Xing" || id === "Info") {
         return parseXingHeader(buffer, offset + frameHeaderSize, tags);
@@ -310,8 +302,18 @@ async function parseID3Tag(buffer: ArrayBuffer, version: number, file?: File | B
         return parseVBRIHeader(buffer, offset + frameHeaderSize, tags);
       }
 
-      if (file && buffer.byteLength < file.size) {
-        buffer = await getBuffer(file);
+      if (file) {
+        if (buffer.byteLength < file.size) {
+          buffer = await getBuffer(file);
+        }
+        const timePerFrame = (tags.samplesPerFrame as number) / (tags.sampleRate as number);
+        const dataSize = file.size - offset;
+        const frameSize = getAudioFrameSize(bytes[2], tags);
+        const frameCount = Math.floor(dataSize / frameSize);
+        const duration = Math.floor(frameCount * timePerFrame);
+
+        tags.duration = duration;
+        return tags;
       }
       isFirstAudioFrame = false;
     }
